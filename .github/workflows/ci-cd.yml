@@ -34,7 +34,7 @@ jobs:
 
   deploy:
     needs: test
-    runs-on: [self-hosted, linux, module5]
+    runs-on: [self-hosted, linux, X64]
 
     steps:
       - name: Checkout source code
