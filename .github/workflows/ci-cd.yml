@@ -1,0 +1,64 @@
+name: Module 5 CI CD
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run tests and save output
+        run: |
+          mkdir -p output
+          npm run check > output/test-results.txt 2>&1
+
+      - name: Upload test results artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: output/test-results.txt
+
+  deploy:
+    needs: test
+    runs-on: [self-hosted, linux, module5]
+
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Download test results artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: test-results
+          path: output
+
+      - name: Display artifact content
+        run: cat output/test-results.txt
+
+      - name: Deploy application
+        run: |
+          pm2 delete node-app || true
+          pm2 start "./src/server.js" --name node-app
+          pm2 save
